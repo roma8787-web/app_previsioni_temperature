@@ -12,22 +12,34 @@ st.set_page_config(page_title="📈 Previsioni delle Temperature – 7 Giorni", 
 st.title("📈 Previsioni delle Temperature – 7 Giorni")
 st.markdown("Modello LSTM addestrato sui dati storici per prevedere l'andamento delle temperature.")
 
-# 📥 Carica dati
-try:
-    df = pd.read_csv("Dati_temperatura.csv")
-    df.columns = [col.lower() for col in df.columns]
+# 📥 Carica dati da upload
+st.subheader("📂 Carica il file CSV con i dati")
 
-    if 'data' not in df.columns or 'temperatura' not in df.columns:
-        st.error("❌ Il file CSV deve contenere le colonne 'data' e 'temperatura'.")
+uploaded_file = st.file_uploader("Scegli un file CSV", type="csv")
+
+if uploaded_file is not None:
+    try:
+        df = pd.read_csv(uploaded_file)
+        df.columns = [col.lower() for col in df.columns]
+
+        if 'data' not in df.columns or 'temperatura' not in df.columns:
+            st.error("❌ Il file CSV deve contenere le colonne 'data' e 'temperatura'.")
+            st.stop()
+
+        df['Date'] = pd.to_datetime(df['data'])
+        df['Temperature'] = df['temperatura']
+        df = df.sort_values("Date")
+
+        st.success("✅ File caricato correttamente!")
+        st.markdown("**Colonne presenti:**")
+        st.write(df[["Date", "Temperature"]].head())
+
+    except Exception as e:
+        st.error(f"❌ Errore nel caricamento del CSV: {e}")
         st.stop()
-
-    df['Date'] = pd.to_datetime(df['data'])
-    df['Temperature'] = df['temperatura']
-    df = df.sort_values("Date")
-except Exception as e:
-    st.error(f"❌ Errore nel caricamento del CSV: {e}")
+else:
+    st.warning("📁 Carica un file CSV per iniziare.")
     st.stop()
-
 # Carica scaler e modello
 scaler = joblib.load("scaler.save")
 model = tf.keras.models.load_model("modello_lstm.keras")
