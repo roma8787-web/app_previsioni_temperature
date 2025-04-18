@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,10 +12,21 @@ st.set_page_config(page_title="📈 Previsioni delle Temperature – 7 Giorni", 
 st.title("📈 Previsioni delle Temperature – 7 Giorni")
 st.markdown("Modello LSTM addestrato sui dati storici per prevedere l'andamento delle temperature.")
 
-# Carica dati
-df = pd.read_csv("Dati_temperatura.csv")
-df['Date'] = pd.to_datetime(df['Date'])
-df = df.sort_values("Date")
+# 📥 Carica dati
+try:
+    df = pd.read_csv("Dati_temperatura.csv")
+    df.columns = [col.lower() for col in df.columns]
+
+    if 'data' not in df.columns or 'temperatura' not in df.columns:
+        st.error("❌ Il file CSV deve contenere le colonne 'data' e 'temperatura'.")
+        st.stop()
+
+    df['Date'] = pd.to_datetime(df['data'])
+    df['Temperature'] = df['temperatura']
+    df = df.sort_values("Date")
+except Exception as e:
+    st.error(f"❌ Errore nel caricamento del CSV: {e}")
+    st.stop()
 
 # Carica scaler e modello
 scaler = joblib.load("scaler.save")
